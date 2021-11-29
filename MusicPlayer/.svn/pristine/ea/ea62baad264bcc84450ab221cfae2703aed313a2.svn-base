@@ -1,0 +1,38 @@
+package UserService;
+
+class AsciiArt {
+		
+	public void panelArtU() {
+		System.out.println("┌──────────────────────────────────────┐");
+		System.out.println("|                                      |");
+	}
+	public void panelArtD() {
+		System.out.println("|                                      |");
+		System.out.println("└──────────────────────────────────────┘");
+		System.out.println("		       ᕱ ᕱ  ||");
+		System.out.println("		   ( ･ω･ ||");
+		System.out.println("		 /　つΦ\r\n");	
+	}
+
+	public void meunArt() {
+		System.out.println(" ♡ ∩_∩");
+		System.out.println("（„• ֊ •„)♡");
+		System.out.println("┌───UU────────────────────────────────────────────────────────────┐");
+		System.out.println("|                                                                 |");
+		System.out.println("|      1.로그인    2.회원가입    3.게스트로 입장    0.종료        |");
+		System.out.println("|                                                                 |");
+		System.out.println("└─────────────────────────────────────────────────────────────────┘");
+	}
+
+	public void systemArt() {
+		System.out.println("┌─────────────────────────────────────────────────────────────────────┐");
+		System.out.println("|　오류 발생!　                                          [－][口][×]  |");
+		System.out.println("|￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣ |");
+		System.out.println("|                                                                     |");
+		System.out.println("|                                                                     |");
+		System.out.println("|       ｜예　　　  ｜    ｜아마도?   ｜      ｜예      ｜            |");
+		System.out.println("|        ￣￣￣￣￣￣      ￣￣￣￣￣￣        ￣￣￣￣￣             |");
+		System.out.println("|                                                                     |");
+		System.out.println("└─────────────────────────────────────────────────────────────────────┘");
+	}
+}

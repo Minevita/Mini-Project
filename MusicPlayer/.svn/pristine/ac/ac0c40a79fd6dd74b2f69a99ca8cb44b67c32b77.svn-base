@@ -1,0 +1,45 @@
+package UserService;
+
+import static MusicPlayerUtil.MusicPlayerCommon.nextIntFromTo;
+
+import java.io.Serializable;
+
+import UserVo.User;
+
+/**
+ * 
+ * @author 김기락
+ * 210805 테스트용 main 작성
+ * 차후 실제 메인으로 편집 예정
+ */
+public class UserEx  {
+	public static void main(String[] args)  {
+		UserService us = new UserServiceImpl();
+		while(true) {
+			try {
+				execute(us);
+			} catch (Exception e) {
+				System.out.println("정확한 숫자를 입력해주세요");
+			}
+		}
+	}
+	static void execute(UserService us)    {
+
+		int input = nextIntFromTo("1. 로그인  2. 회원가입 3. 게스트로 입장 4. 종료", 1, 4);
+		switch (input) {
+		case 1:
+			us.login();
+			break;
+		case 2:
+			us.addUser();
+			break;
+		case 3:
+			us.guestUser();
+			break;
+		case 4:
+			System.out.println("프로그램을 종료합니다.");
+
+		}
+	}
+
+}

@@ -1,0 +1,227 @@
+package MusicPlayerUtil;
+
+import static MusicPlayerUtil.MusicPlayerCommon.*;
+import MusicPlayerService.*;
+
+import java.io.ObjectInputStream.GetField;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import MusicVo.Music;
+import UserVo.*;
+/**
+ * @author 김문수
+ * 2021-08-05
+ * MusicPlayerServiceimpl에 있는 리스트 출력용 메서드를 클래스로 생성.
+ * 메서드 여러개로 나눔.
+ */
+
+public class PageViewer {
+	ArrayList<String> list = new ArrayList<String>();
+	List<Music> musicList = new ArrayList<Music>();
+	User user = new User();
+	Music music = new Music();
+	MusicPlayerServiceImpl mps;
+	private int printNum=10; // 표시될 음악 갯수
+	private int curPage = 1;  // 현재페이지
+	private int musicNum; // 음악 총합
+	private boolean isAddMusic = false;
+	private boolean isExit = false;
+
+	public PageViewer(MusicPlayerServiceImpl mps) {
+		super();
+		this.mps = mps;
+	}
+	
+	public void createMusic() {
+		// 테스트 데이터 생성
+	for(int i=0;i<56;i++) {
+			int index = i + 1;
+			list.add( index + "번 음악");
+		}
+	}
+	
+	/**
+	 * @author 김문수
+	 * 2021-08-06
+	 * 통합 출력용 메서드. 리스트를 보여주고, 선택용 버튼을 구현.
+	 */
+	public void display(String listName, List<?> list) {
+		if(list == null) {
+			System.out.println("잘못된 리스트입니다.");
+			return;
+		}
+		else if(list.isEmpty()) {
+			System.out.println("리스트내에 음악이 없습니다.");
+			return;
+		}
+		
+		musicNum = list.size();
+		allListViewer(listName, list);
+		System.out.println(getPageElements());
+		pageButton(listName, list);
+
+		//화면에서 빠져나갈때 사용됩니다.
+		if(isExit) {
+			isExit = false;
+			return;
+		}
+		else {
+			curPage = 1;
+			display(listName, list);
+		}
+	}
+	
+	public String getPageElements() {
+		int totalPage = getTotalPage();
+		boolean prevPage = curPage > 1;
+		boolean nextPage = curPage < totalPage;
+		return "\n" + " Pages : " + curPage + " / " + totalPage + "\n" + (prevPage ? "1.이전    " : "") + (nextPage ? "2.다음    " : "") +
+				"3.선택    4.검색    5.전체재생    0.뒤로";
+	}
+	
+	public int getTotalPage() {
+		return (int)Math.ceil(musicNum/(double) printNum);
+	}
+	
+	public void allListViewer(String listName, List<?> list) {
+		int listNum = 0;
+		int startNum = (curPage -1) * printNum;
+		int endNum = startNum + printNum;
+		if (list.isEmpty()) {
+			System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+			System.out.println("리스트가 비었습니다.");
+			return;
+		}else {
+			try {
+			int musicNum = list.size();
+			printAttribute(listName, list);
+			for (int i = startNum; i < endNum; i++) {
+				if(i > musicNum) break;
+				System.out.printf("%d. %s%n",listNum += 1, list.get(i));
+			}
+			}catch(IndexOutOfBoundsException e) {}
+			System.out.println("========================================================================================================");
+		}
+	}
+	
+	public void pageButton(String listName, List<?> list) {
+		int input = nextInt("");
+		switch(input) {
+		case 1:
+			if(1 < curPage) {
+			curPage -= 1;
+			}
+			display(listName, list);
+			break;
+		case 2:
+			if(getTotalPage() > curPage) {
+			curPage +=1;
+			}
+			display(listName, list);
+			break;
+		case 3:
+			//곡선택
+			choiceOne(listName, list);
+			if(isAddMusic) {
+				mps.addMusic(music);
+				isAddMusic = false;
+			}
+			break;
+		case 4:
+			//검색
+			if(list.get(0) instanceof Music) {
+				mps.search(list);
+			}else if(list.get(0) instanceof String) {
+				mps.searchList(list);
+			}
+			break;
+		case 5:
+			if(list.get(0) instanceof Music)
+				mps.listPlay((List<Music>) list);
+			break;
+		case 0:
+			//종료
+			isExit = true;
+			return;
+		}
+	}
+	/**
+	 * MyList와 Music의 속성이 달라 따로 구분해서 출력하기 위한 매서드 입니다.
+	 * @author 김문수
+	 * 2021-08-07
+	 */
+	public void printAttribute(String listName, List<?> list) {
+		if(list.get(0) instanceof Music) {
+			System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+			System.out.println("\n" + listName);
+			System.out.println("========================================================================================================");
+			System.out.println("              곡명                           가수                       앨범                장르        ");
+			System.out.println("========================================================================================================");
+		}else if(list.get(0) instanceof String){
+			System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+			System.out.println("\n" + listName);
+			System.out.println("========================================================================================================");
+		}
+	}
+	/**
+	 * MyList인지 Music인지 판단해서 각기 다른 메서드를 호출해 pageButton으로 보내줍니다. 
+	 * @author 김문수
+	 * 2021-08-08
+	 */
+	public void choiceOne(String listName, List<?> list) {
+		int input;
+		if(list.get(0) instanceof Music) {
+			input = nextInt("음악의 번호를 고르세요.");
+			music = (Music) list.get(curPage * input -1);
+			mps.pickMusic(music);
+		}else if(list.get(0) instanceof String) {
+			mps.pickList(choiceMyList(list));
+		}
+	}
+	/**
+	 * MyList용 리스트뷰어 메서드입니다. 
+	 * @author 김문수
+	 * 2021-08-08
+	 * @return 
+	 */
+	public String choiceMyList(List<?> list) {
+		int input = nextInt("마이리스트의 번호를 고르세요.");
+		String name = (String) list.get(curPage * input -1);
+		return name;
+	}
+
+	public int getPrintNum() {
+		return printNum;
+	}
+
+	public void setPrintNum(int printNum) {
+		this.printNum = printNum;
+	}
+
+	public int getMusicNum() {
+		return musicNum;
+	}
+
+	public void setMusicNum(int musicNum) {
+		this.musicNum = musicNum;
+	}
+
+	public int getCurPage() {
+		return curPage;
+	}
+
+	public void setCurPage(int curPage) {
+		this.curPage = curPage;
+	}
+	
+	public boolean isAddMusic() {
+		return isAddMusic;
+	}
+
+	public void setAddMusic(boolean isAddMusic) {
+		this.isAddMusic = isAddMusic;
+	}
+}

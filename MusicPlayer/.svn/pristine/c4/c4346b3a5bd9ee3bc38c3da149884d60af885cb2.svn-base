@@ -1,0 +1,198 @@
+package MusicPlayerController;
+
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.LinkedList;
+
+import javax.sound.sampled.*;
+
+import javazoom.jl.decoder.*;
+import javazoom.jl.player.*;
+
+public class MusicPlayerController implements Runnable{
+
+	/**
+	 * 디코딩을 위해 javazoom이 제공하는 클래스를 오버라이딩
+	 * @author 문현석
+	 * 2021-07-31
+	 */
+	static class Sample{
+		private short[] buffer;
+		private int length;
+		
+		public Sample(short[] buf, int s) {
+			buffer = buf.clone();
+			length = s;
+		}
+		
+		public short[] GetBuffer() {
+			return buffer;
+		}
+		
+		public int GetLength() {
+			return length;
+		}
+	}
+	
+	public static final int BUFFER_SIZE = 10000;
+	
+	private Decoder decoder;
+	private AudioDevice out;
+	private ArrayList<Sample> playes;
+	private int length;
+	
+	public boolean isInvalid() {
+		return (decoder == null || out == null || playes == null || !out.isOpen());
+	}
+	
+	/**
+	 * 스트림을 통해 샘플링하여 버퍼에 집어 넣는다.
+	 * @param path
+	 * @return
+	 */
+	protected boolean GetPlayes(String path) {
+		if(isInvalid()) return false;
+		
+		try {
+			Header header;
+			SampleBuffer pb;
+			FileInputStream in = new FileInputStream(path);
+			Bitstream bitstream = new Bitstream(in);
+			if((header = bitstream.readFrame()) == null) return false;
+			
+			while(length < BUFFER_SIZE && header != null) {
+				pb = (SampleBuffer)decoder.decodeFrame(header, bitstream);
+				playes.add(new Sample(pb.getBuffer(), pb.getBufferLength()));
+				length++;
+				bitstream.closeFrame();
+				header = bitstream.readFrame();
+			}
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+	}
+	
+	public boolean open(String path) {
+		try {
+			decoder = new Decoder();
+			out = FactoryRegistry.systemRegistry().createAudioDevice();
+			playes = new ArrayList<Sample>(BUFFER_SIZE);
+			length = 0;
+			out.open(decoder);
+			GetPlayes(path);
+		}
+		catch(Exception e) {
+			decoder = null;
+			out = null;
+			playes = null;
+			return false;
+		}
+		return true;
+	}
+	
+	private Thread thisThread;
+	
+	final static int STATE_INIT = 0;
+	final static int STATE_STARTED = 1;
+	final static int STATE_SUSPENDED = 2;
+	final static int STATE_STOPPED = 3;
+	
+	static int stateCode = STATE_INIT;
+	
+	public void start() {
+		synchronized(this) {
+			thisThread = new Thread(this);
+			thisThread.start();
+			stateCode = STATE_STARTED;
+		}
+	}
+	
+	@Override
+	public void run() {
+		while(true) {
+			if(stateCode == STATE_STOPPED) break;
+			play();
+		}
+	}
+	
+	@SuppressWarnings("static-access")
+	public void stop() {
+		synchronized(this) {
+			this.stateCode = STATE_STOPPED;
+			try {
+				thisThread.sleep(100);
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+			System.out.println("정지");
+		}
+	}
+	
+	/**
+	 * 버퍼에 저장된 데이터를 꺼내서 노래를 실행
+	 */
+	@SuppressWarnings("static-access")
+	public void play() {
+		if(isInvalid()) return;
+		System.out.println("음악 재생중입니다.");
+		try {
+			for(int i = 0 ; i < length; i++) {
+				out.write(playes.get(i).GetBuffer(), 0, playes.get(i).GetLength());
+				if(stateCode == STATE_STOPPED) close();
+				if(stateCode == STATE_SUSPENDED) {
+					while(true) {
+						try {
+							thisThread.sleep(1);
+						}
+						catch(InterruptedException e) {
+							e.printStackTrace();
+						}
+						if(stateCode == STATE_STARTED || stateCode == STATE_STOPPED) break;
+					}
+				}
+			}
+		}
+		catch(JavaLayerException e) {}
+		close();
+	}
+	
+	public void close() {
+		if((out != null) && !out.isOpen()) out.close();
+		
+		length = 0;
+		playes = null;
+		out = null;
+		decoder = null;
+	}
+	
+	public void suspend() {
+		switch (stateCode) {
+		case STATE_SUSPENDED:
+			return;
+		case STATE_INIT:
+			System.out.println("실행 중이 아닙니다.");
+			break;
+		case STATE_STOPPED:
+			System.out.println("정지상태 입니다.");
+			break;
+		default:
+			System.out.println("일시정지");
+			stateCode = STATE_SUSPENDED;
+			break;
+		}
+	}
+	
+	public void resume() {
+		if(stateCode == STATE_STARTED || stateCode == STATE_INIT) {
+			System.out.println("실행 중이 아닙니다.");
+			return;
+		}
+		if(stateCode == STATE_STOPPED) {
+			System.out.println("정지상태 입니다.");
+		}
+		stateCode = STATE_STARTED;
+		System.out.println("다시 재생.");
+	}
+}

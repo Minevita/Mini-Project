@@ -1,0 +1,191 @@
+package MusicPlayerService;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.LogManager;
+
+import MusicVo.*;
+import Mp3PathParser.*;
+/**
+ * @author 문현석
+ * 2021-07-30
+ * MusicPlayerUtill -> MusicPlayerUtil로 변경
+ * MusicPlayerCommon내의 멤버는 new없이 사용가능
+ */
+import static MusicPlayerUtil.MusicPlayerCommon.*;
+
+/**
+ * @author 김문수 2021-07-28 MusicPlayerServie 인터페이스의 기능 구현. 실제 구동의 경우 testList는
+ *         systemPlayList가 되어야 함. allList 구현 작업중
+ */
+public class MusicPlayerServiceimpl implements MusicPlayerService {
+	private List<Music> systemPlayList = new ArrayList<Music>();
+	private Mp3PathParser mp3PathParser;
+	{
+		String directoryPath = nextLine("음악폴더 경로를 지정해주세요.>");
+		mp3PathParser = new Mp3PathParser(directoryPath);
+		LogManager.getLogManager().reset();
+		for (String filePath : mp3PathParser.getPathList()) {
+//				System.out.println(filePath);
+			Music music = new Music(filePath);
+
+			if (music.getTag() == null)
+				continue;
+
+			systemPlayList.add(new Music(filePath));
+		}
+	}
+	// 만약 곡리스트가 10곡이상이면, 페이지를 나눠서 출력
+	// 그리고, 버튼 입력받아서 페이지다음, 이전가능하게 구현
+
+	/**
+	 * @author 김문수 2021-07-29 allList 구현 후 1차 수정. 음악의 모든 목록을 페이지를 나눠서 출력. 페이지 이동, 곡
+	 *         선택 구현.
+	 */
+	public void allList() {
+		int input = 0;
+		if (systemPlayList.isEmpty()) {
+			System.out.println("리스트가 비었습니다.");
+			return;
+		}
+		int printNum = 10;
+		int num = printNum;
+		int j = 0;
+		int cnt = 0;
+		while (true) {
+			for (int i = 0 + j; i < printNum + j; i++) {
+				if (0 <= i && i < systemPlayList.size())
+					System.out.println((num++ - printNum + 1) + ". " + systemPlayList.get(i));
+				if ((i + 1) % printNum == 0 && cnt != 0) {
+					num = printNum;
+					System.out.println();
+					System.out.println("Page " + (cnt + 1) + " / " + (int) (systemPlayList.size() / (float) num + 0.9));
+					input = nextInt("이전 : 1    다음 : 2    종료 : 3    음악선택 : 4 ");
+				} else if ((i + 1) % printNum == 0 && cnt == 0) {
+					num = printNum;
+					System.out.println();
+					System.out.println(
+							"Page " + (cnt + 1) + " / " + (int) (systemPlayList.size() / (float) printNum + 0.9));
+					input = nextInt("다음 : 2    종료 : 3    음악선택 : 4 ");
+				} else if (i == systemPlayList.size() - 1) {
+					num = printNum;
+					System.out.println();
+					System.out.println(
+							"Page " + (cnt + 1) + " / " + (int) (systemPlayList.size() / (float) printNum + 0.9));
+					input = nextInt("이전 : 1    종료 : 3    음악선택 : 4 ");
+				}
+			}
+			switch (input) {
+			case 1:
+				System.out.println();
+				j -= printNum;
+				cnt--;
+				break;
+			case 2:
+				System.out.println();
+				j += printNum;
+				cnt++;
+				break;
+			case 3:
+				System.out.println();
+				return;
+			case 4:
+				System.out.println();
+				input = nextInt("[ " + (printNum - printNum + 1) + " ~ " + printNum + " ]" + " 음악 번호를 입력하세요. ");
+				System.out.println();
+				System.out.println("Selected >>>  " + systemPlayList.get((input - 1) + cnt * printNum) + "   <<<");
+				System.out.println();
+				input = nextInt("재생 : 1   마이리스트 추가 : 2    즐겨찾기 : 3");
+				switch (input) {
+				case 1:
+					// 재생 메서드 호출
+					break;
+				case 2:
+					// 마이리스트가 없으면 생성
+//	                    		 createMyList();
+					// 있으면 목록 출력 후 add
+				case 3:
+//	                    		 favoritList.add
+
+				}
+				break;
+
+			}
+		}
+	}
+
+	public void createMyList() {
+		String name = nextLine("MyList입니다. 리스트 이름을 지어주세요.");
+		ArrayList<String> testMyList = new ArrayList<String>();
+	}
+
+	public void myList() {
+
+	}
+
+	public void favoritList() {
+
+	}
+
+	/**
+	 * @author 현석 기능 테스트를 위한 임시 main메서드 입니다.
+	 * 
+	 */
+	public static void main(String[] args) {
+		MusicPlayerService mps = new MusicPlayerServiceimpl();
+		mps.allList();
+	}
+
+	private void listViewer(List<Music> list) {
+		int input = 0;
+		if (list.isEmpty()) {
+			System.out.println("리스트가 비었습니다.");
+			return;
+		}
+		int printNum = 10;
+		int num = printNum;
+		int j = 0;
+		int cnt = 0;
+		while (true) {
+			for (int i = 0 + j; i < printNum + j; i++) {
+				if (0 <= i && i < list.size())
+					System.out.println((num++ - printNum + 1) + ". " + list.get(i));
+				if ((i + 1) % printNum == 0 && cnt != 0) {
+					num = printNum;
+					System.out.println();
+					System.out.println("Page " + (cnt + 1) + " / " + (int) (list.size() / (float) num + 0.9));
+					input = nextInt("이전 : 1    다음 : 2    종료 : 3    음악선택 : 4 ");
+				} else if ((i + 1) % printNum == 0 && cnt == 0) {
+					num = printNum;
+					System.out.println();
+					System.out.println(
+							"Page " + (cnt + 1) + " / " + (int) (list.size() / (float) printNum + 0.9));
+					input = nextInt("다음 : 2    종료 : 3    음악선택 : 4 ");
+				} else if (i == list.size() - 1) {
+					num = printNum;
+					System.out.println();
+					System.out.println(
+							"Page " + (cnt + 1) + " / " + (int) (list.size() / (float) printNum + 0.9));
+					input = nextInt("이전 : 1    종료 : 3    음악선택 : 4 ");
+				}
+				switch (input) {
+				case 1:
+					System.out.println();
+					j -= printNum;
+					cnt--;
+					break;
+				case 2:
+					System.out.println();
+					j += printNum;
+					cnt++;
+					break;
+				case 3:
+					System.out.println();
+					return;
+
+				}
+
+			}
+		}
+	}
+}

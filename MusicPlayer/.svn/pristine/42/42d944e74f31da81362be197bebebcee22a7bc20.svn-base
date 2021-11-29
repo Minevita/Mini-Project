@@ -1,0 +1,203 @@
+package MusicPlayerUtil;
+
+import java.util.List;
+import MusicPlayerUtil.*;
+import static MusicPlayerUtil.MusicPlayerCommon.*;
+/**
+ * @author 김문수
+ * 2021-08-05
+ * MusicPlayerServiceimpl에 있는 리스트 출력용 메서드를 클래스로 생성.
+ * 메서드 여러개로 나눔.
+ */
+public class PageViewer {
+	private int printNum = 10;
+	
+	private int pageNum;  // 페이지수
+	private int startNum; // 시작
+	private int endNum;   // 끝
+	private int listNum;  // 페이지 내 리스트 순차 번호
+	private int curPage;  // 현재페이지
+	private int prevPage; // 이전
+	private int nextPage; // 다음
+	private int totalPage;// 총페이지
+	private int musicNum; // 음악 총합
+
+	public void listViewer(List<String> list) {
+		startNum = curPage * printNum + 1;
+		endNum = startNum + printNum - 1;
+		if (list.isEmpty()) {
+			System.out.println("리스트가 비었습니다.");
+			return;
+		}else {
+			musicNum = list.size(); 
+			for (int i = startNum; i < endNum; i++) {
+					System.out.printf("%d. %s%n",listNum += 1, list.get(i));
+			}
+		}
+		pageControl(list);
+	}
+	
+	public void pageControl(List<String> list) {
+		prevPage = curPage + 1;
+		nextPage = curPage - 1;
+		totalPage = (int) Math.ceil(musicNum / printNum);
+		curPage = 0;
+		System.out.printf("%n%d / %d%n",curPage, totalPage );
+		pageButton();
+	}
+	
+	public void pageButton() {
+		int input;
+		if(curPage == 0) {
+			input = nextInt("다음 : 2    선택 : 3    종료 : 4");
+		}else if(curPage == totalPage) {
+			input = nextInt("이전 : 1    선택 : 3    종료 : 4");
+		}else {
+			input = nextInt("이전 : 1    다음 : 2    선택 : 3    종료 : 4");
+		}
+		switch(input) {
+		case 1:
+			setCurPage(prevPage);
+			break;
+		case 2:
+			setCurPage(nextPage);
+			break;
+		case 3:
+			int pick = nextInt("목록의 번호를 고르세요.");
+//			pickMusic(pick);   // 픽뮤직 구현시 호출
+			break;
+		case 4:
+			return;
+		}
+	}
+				
+				
+				
+//				
+//				if ((i + 1) % printNum == 0 && cnt != 0) {
+//					num = printNum;
+//					System.out.println();
+//					System.out.println("Page " + (cnt + 1) + " / " + (int) (listMine.size() / (float) num + 0.9));
+//					input = nextInt("이전 : 1    다음 : 2    종료 : 3    마이리스트선택 : 4");
+//				} else if ((i + 1) % printNum == 0 && cnt == 0) {
+//					num = printNum;
+//					System.out.println();
+//					System.out.println("Page " + (cnt + 1) + " / " + (int) (listMine.size() / (float) printNum + 0.9));
+//					input = nextInt("다음 : 2    종료 : 3    마이리스트선택 : 4");
+//				} else if (i == listMine.size() - 1) {
+//					num = printNum;
+//					System.out.println();
+//					System.out.println("Page " + (cnt + 1) + " / " + (int) (listMine.size() / (float) printNum + 0.9));
+//					input = nextInt("이전 : 1    종료 : 3    마이리스트선택 : 4 ");
+//				}
+//				switch (input) {
+//				case 1:
+//					System.out.println();
+//					j -= printNum;
+//					cnt--;
+//					break;
+//				case 2:
+//					System.out.println();
+//					j += printNum;
+//					cnt++;
+//					break;
+//				case 3:
+//					System.out.println();
+//					return;
+//				case 4:
+//					
+//					System.out.println();
+//					input = nextInt("[ " + (printNum - printNum + 1) + " ~ " + printNum + " ]" + " 리스트 번호를 입력하세요. ");
+//					System.out.println();
+//					System.out.println("Selected >>>  " + listMine.get((input - 1) + cnt * printNum) + "   <<<");
+//					listViewer(user.getPlayList().get(listMine.get((input - 1)))); 
+//					System.out.println();
+//					input = nextInt("재생 : 1   마이리스트 추가 : 2    즐겨찾기 : 3");
+//					break;
+//				
+//				}
+//			}
+//		}
+//	}
+
+	public int getPrintNum() {
+		return printNum;
+	}
+
+	public void setPrintNum(int printNum) {
+		this.printNum = printNum;
+	}
+
+	public int getPageNum() {
+		return pageNum;
+	}
+
+	public void setPageNum(int pageNum) {
+		this.pageNum = pageNum;
+	}
+
+	public int getPrevPage() {
+		return prevPage;
+	}
+
+	public void setPrevPage(int prevPage) {
+		this.prevPage = prevPage;
+	}
+
+	public int getNextPage() {
+		return nextPage;
+	}
+
+	public void setNextPage(int nextPage) {
+		this.nextPage = nextPage;
+	}
+
+	public int getMusicNum() {
+		return musicNum;
+	}
+
+	public void setMusicNum(int musicNum) {
+		this.musicNum = musicNum;
+	}
+
+	public int getStartNum() {
+		return startNum;
+	}
+
+	public void setStartNum(int startNum) {
+		this.startNum = startNum;
+	}
+
+	public int getEndNum() {
+		return endNum;
+	}
+
+	public void setEndNum(int endNum) {
+		this.endNum = endNum;
+	}
+
+	public int getListNum() {
+		return listNum;
+	}
+
+	public void setListNum(int listNum) {
+		this.listNum = listNum;
+	}
+
+	public int getCurPage() {
+		return curPage;
+	}
+
+	public void setCurPage(int curPage) {
+		this.curPage = curPage;
+	}
+
+	public int getTotalPage() {
+		return totalPage;
+	}
+
+	public void setTotalPage(int totalPage) {
+		this.totalPage = totalPage;
+	}
+	
+}

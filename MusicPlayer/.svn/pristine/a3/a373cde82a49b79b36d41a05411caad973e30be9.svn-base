@@ -1,0 +1,183 @@
+package Mp3tagParser;
+
+import java.io.File;
+import java.util.List;
+import java.util.logging.LogManager;
+
+import org.jaudiotagger.tag.Tag;
+
+import Mp3PathParser.Mp3PathParser;
+
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.mp3.MP3File; 
+import org.jaudiotagger.tag.FieldKey; 
+
+/**
+ * @author 김기락
+ * 2021-07-30
+ * mp3파일의 tag 파싱하여 각 파싱된 인스턴스들을 토대로 리스트를 만듬
+ */
+
+// mp3파일의 태그(노래제목, 아티스트, 장르등)를 파싱합니다.
+public class Mp3tagParser  {
+	
+	//필드
+	private String title;
+	private String artist;
+	private String album;
+	private String genre; 		// 여기까지 게터만 구현
+	private int length;			// 게터메서드내에서 분,초 단위로 반환 타입은 String
+	private int lengthMinute;	// 이후 분, 초 출력은 차후에 스킵기능에 기준을 정할때 SET을 추가하면 좋을것 같음
+	private int lengthSecend;
+	private boolean isTrash;	//재생할수 없는 파일이면 true값을 가집니다
+	
+	public boolean isTrash() {
+		return isTrash;
+	}
+	public void setTrash(boolean isTrash) {
+		this.isTrash = isTrash;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getArtist() {
+		return artist;
+	}
+	public void setArtist(String artist) {
+		this.artist = artist;
+	}
+	public String getAlbum() {
+		return album;
+	}
+	public void setAlbum(String album) {
+		this.album = album;
+	}
+	public String getGenre() {
+		return genre;
+	}
+	public void setGenre(String genre) {
+		this.genre = genre;
+	}
+	
+	public int getLength() {
+		return length;
+	}
+	public void setLength(int length) {
+		this.length = length;
+	}
+	public int getLengthMinute() {
+		return lengthMinute;
+	}
+	public void setLengthMinute(int lengthMinute) {
+		this.lengthMinute = lengthMinute;
+	}
+	public int getLengthSecend() {
+		return lengthSecend;
+	}
+	public void setLengthSecend(int lengthSecend) {
+		this.lengthSecend = lengthSecend;
+	}
+	
+
+//	String 타입 출력을 위한 getter
+	
+	
+	public String getLStr() {
+		return length + "";
+	}
+	public String getLMStr() {
+		return lengthMinute + "";
+	}
+	public String getLSStr() {
+		return lengthSecend + "";
+	}
+	
+	
+	public Mp3tagParser(){}
+	public Mp3tagParser(String path){
+		this.parse(path);
+	}
+	
+/**
+ * 		@author 김기락
+ * 		2021-07-30
+ * 		MP3 파일을 읽어오는 기능
+ * 		파일이 일기에 실패한 경우 예외 처리(문장 출력 후 반환)
+ */
+	private void parse(String path) {
+		File file = new File(path); 
+		MP3File mp3;
+		Tag tag;
+		try {
+			mp3 = (MP3File) AudioFileIO.read(file);
+		} catch (Exception e) {
+			/**
+			 * @author 현석
+			 * 2021-07-30
+			 * 재생할수없는 파일일 경우 null값을 tag에 담고 빠져나갑니다
+			 * 뮤직리스트 생성시 tag가 null인경우 뮤직객체를 생성하지 않습니다. 
+			 */
+			System.out.println("손상된 파일입니다. 리스트에 추가 할 수 없습니다.");
+			this.isTrash = true;
+			return;
+		} 
+		
+		
+/**
+ * 		@author 김기락
+ * 		2021-07-30
+ * 		태그정보 존재 여부 확인 조건문
+ * 		확인 후 없을 경우 출력될 문장들
+ */
+		tag = mp3.getTag();
+
+		if (!mp3.hasID3v1Tag()) {								 
+			setTitle("Title 정보가 존재하지 않습니다."); 		 
+			setArtist("Artist 정보가 존재하지 않습니다."); 
+			setAlbum("Album 정보가 존재하지 않습니다.");
+			setGenre("Genre 정보가 존재하지 않습니다.");
+			this.length = mp3.getAudioHeader().getTrackLength();	
+			this.lengthMinute = length / 60;						
+			this.lengthSecend = length % 60;						
+			return;
+		}
+		
+//		각 변수들에 들어갈 Tag정보	(차후 추가될 tag정보가 있다면 이곳에서 추가)
+		
+		this.title = tag.getFirst(FieldKey.TITLE); 				// 노래제목
+		this.artist = tag.getFirst(FieldKey.ARTIST);  			// 아티스트
+		this.album = tag.getFirst(FieldKey.ALBUM); 				// 앨범
+		this.genre = tag.getFirst(FieldKey.GENRE);				// 장르
+		this.length = mp3.getAudioHeader().getTrackLength();	// 노래길이
+		this.lengthMinute = length / 60;						// 분 단위
+		this.lengthSecend = length % 60;						// 초 단위
+	
+	}
+	
+	public String toString() {					// 각 인자 값 출력. (길이는 분+초 단위 출력)
+		return "Mp3tagParser \n[title = " + title + "]\n[artist = " + artist + "]\n[album = " + album + "]\n[genre = " + genre
+				+ "]\n[length = " + lengthMinute + "minute " + lengthSecend +  "second]";
+	}
+
+/**
+* 		@author 김기락
+* 		2021-07-30
+* 		테스트용 main method 
+* 		console의 경고 발생 출력 억제 코드 추가
+*/
+//	public static void main(String[] args) {
+//		LogManager.getLogManager().reset();						//jaudiotagger는 MP3 파일을 분석할 때 경고발생 시 출력 억제 코드
+//		
+//		Mp3tagParser tag = new Mp3tagParser("C:\\Users\\김기락\\Desktop\\음악파일\\Chocolate Cookie Jam - An Jone.mp3") {};
+//		System.out.println(tag.toString());
+//		
+//		File mDir = new File("C:\\Users\\김기락\\Desktop\\음악파일");		// 파일 경로 설정
+//		String[] fileNames = mDir.list((f, name)->name.endsWith(".mp3"));	// String 배열의 fileName이라는 변수에 파일이름끝에 .mp3가 포함된 파일들을 
+//		for (int i = 0; i < fileNames.length; i++) {						// 
+//		    System.out.println("file: " + fileNames[i]);
+//		}
+//	}
+}

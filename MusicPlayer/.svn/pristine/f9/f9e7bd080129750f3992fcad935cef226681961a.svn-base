@@ -1,0 +1,33 @@
+package MusicPlayerEx;
+
+/**
+ * @author 성지혜
+ * 2021-07-30 MusicPlayerEx 생성 
+ * 
+ */
+
+import static MusicPlayerUtil.MusicPlayerCommon.*;
+import MusicPlayerService.MusicPlayerService;
+import MusicPlayerService.MusicPlayerServiceimpl;
+
+public class MusicPlayerEx {
+	public static void main(String[] args) {
+
+		MusicPlayerService mps = new MusicPlayerServiceimpl();
+		int input = nextInt("1.allList 2.favoritList 3.login");
+
+		switch (input) {
+		case 1:
+			mps.allList();
+			break;
+
+		case 2:
+			mps.favoritList();
+			break;
+
+//		case 3:
+//			mps.login();
+//			break;
+		}
+	}
+}

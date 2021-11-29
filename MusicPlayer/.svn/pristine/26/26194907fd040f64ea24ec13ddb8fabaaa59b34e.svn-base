@@ -1,0 +1,17 @@
+package MusicVo;
+
+import java.io.File;
+import Mp3tagParser.Mp3tagParser;
+
+public class Music {
+	private String path;
+	private Mp3tagParser tag;
+	
+	Music(){}
+	
+	Music(String path){
+		this.tag = new Mp3tagParser(path);
+		this.path = path;
+	}
+
+}

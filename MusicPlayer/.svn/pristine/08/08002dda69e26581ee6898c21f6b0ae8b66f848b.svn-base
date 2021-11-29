@@ -1,0 +1,29 @@
+package Mp3PathParser;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+// 지정된 경로에 있는 mp3파일의 경로를 찾아 저장, 반환할수 있습니다.
+public class Mp3PathParser {
+	
+	private List<String> mp3Path;
+	
+	public Mp3PathParser() {}
+	public Mp3PathParser(File folder) {
+		this.mp3Path = new ArrayList<>();
+		this.allPath(folder);
+	}
+	
+	public void allPath(File folder) {
+		for(File file : folder.listFiles()) {
+			if(!file.isDirectory()) {
+				mp3Path.add(file.getPath());
+			}
+		}
+	}
+	
+	public List<String> getPathList(){
+		return this.mp3Path;
+	}
+}

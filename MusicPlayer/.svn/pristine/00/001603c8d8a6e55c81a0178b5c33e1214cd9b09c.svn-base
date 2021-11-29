@@ -1,0 +1,90 @@
+package MusicPlayerService;
+
+import java.util.ArrayList;
+import java.util.List;
+import MusicVo.*;
+/**
+ * @author 문현석
+ * 2021-07-30
+ * MusicPlayerUtill -> MusicPlayerUtil로 변경
+ * MusicPlayerCommon내의 멤버는 new없이 사용가능
+ */
+import static MusicPlayerUtil.MusicPlayerCommon.*;
+/**
+ * @author 김문수
+ * 2021-07-28 
+ * MusicPlayerServie 인터페이스의 기능 구현.
+ * 실제 구동의 경우 testList는 systemPlayList가 되어야 함.
+ * allList 구현 작업중
+ */
+public class MusicPlayerServiceimpl implements MusicPlayerService{
+	private List<Music> systemPlayList = new ArrayList<Music>();
+	
+	//테스트용
+	private List<String> testList = new ArrayList<String>();
+	{
+		for(int i = 0 ; i < 55; i++) {
+			testList.add("song : "+ (i+1) + "artist : " + (i+1));
+		}
+	}
+	
+	// 만약 곡리스트가 10곡이상이면, 페이지를 나눠서 출력
+	// 그리고, 버튼 입력받아서 페이지다음, 이전가능하게 구현
+	
+	/**
+	 * @author 김문수
+	 * 2021-07-29
+	 * allList 구현 후 1차 수정.
+	 * 음악의 모든 목록을 페이지를 나눠서 출력.
+	 * 페이지 이동, 곡 선택 구현.
+	 */
+	public void allList() {
+		int input = 0; 
+		if(testList.isEmpty()) {
+			System.out.println("리스트가 비었습니다.");
+			return;
+		}
+		int printNum = 5;
+        int j = 0;
+        int cnt = 0;
+        while (true) {
+            for (int i = 0 + j; i < printNum + j; i++) {
+                if(0 <= i && i < testList.size())
+                    System.out.println(testList.get(i));
+                if ((i + 1) % printNum == 0) {
+                    input = nextInt("이전 : 1    다음 : 2    종료 : 3    음악선택 : 4 ");
+                    switch (input) {
+                    case 1:
+                        j -= printNum;
+                        cnt--;
+                        break;
+                    case 2:
+                        j += printNum;
+                        cnt++;
+                        break;
+                    case 3:
+                        return;
+                    case 4:
+                    	System.out.println("음악을 선택하세요.");
+                    	 input = nextInt("1  2  3  4  5");
+                    	 System.out.println("Selected >>>  " + testList.get((input-1) + cnt * printNum) + "   <<<");
+                    	break;
+                    		
+                    	}
+                        
+                    }
+                }
+            }
+        }
+	
+	public void myList() {
+		
+	}
+
+	
+	public void favoritList() {
+		
+		
+	}
+}
+

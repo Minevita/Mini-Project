@@ -1,0 +1,14 @@
+package MusicPlayerService;
+
+
+
+// 뮤직서비스의 기능(메서드)을 정의 합니다
+public interface MusicPlayerService {
+	
+	
+	
+	void allList();
+	
+	
+
+}

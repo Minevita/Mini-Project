@@ -1,0 +1,67 @@
+package MusicVo;
+
+import Mp3tagParser.Mp3tagParser;
+import static MusicPlayerUtil.MusicPlayerCommon.*;
+
+public class Music {
+	private String path;
+	private Mp3tagParser tag;
+	
+	public Music(){}
+	
+	public Music(String path){
+		this.setTag(new Mp3tagParser(path));
+		this.setPath(path);
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public Mp3tagParser getTag() {
+		return tag;
+	}
+
+	public void setTag(Mp3tagParser tag) {
+		this.tag = tag;
+	}
+	
+	/**
+	 * @author 현석
+	 * 인자로 입력한 TITLE ~ LENGTH 중 하나를
+	 * 반환합니다.
+	 * @param TITLE, ARTIST, ALBUM, GENRE, LENGTH
+	 * @return 파라미터에 해당하는 tag의 데이터
+	 */
+	public Object getTag(int tagData) {
+		switch (tagData) {
+		case TITLE:
+			return this.getTag().getTitle();
+		case ARTIST:
+			return this.getTag().getArtist();
+		case ALBUM:
+			return this.getTag().getAlbum();
+		case GENRE:
+			return this.getTag().getGenre();
+		case LENGTH:
+			return this.getTag().getLength();
+		case LENGTH_STR:
+			return this.getTag().getLMStr() + this.getTag().getLSStr();
+		default:
+			return this.getTag();
+		}
+	}
+
+	@Override
+	public String toString() {
+		String str = String.format("%n경로: %s", path);
+		return "Music  tag=" + tag + str;
+	}
+	
+	
+
+}

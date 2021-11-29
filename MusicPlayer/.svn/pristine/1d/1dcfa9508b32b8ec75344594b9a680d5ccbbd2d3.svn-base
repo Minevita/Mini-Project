@@ -1,0 +1,86 @@
+package Mp3tagParser;
+
+import java.io.File;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.mp3.MP3File; 
+import org.jaudiotagger.tag.FieldKey; 
+
+// mp3파일의 태그(노래제목, 아티스트, 장르등)를 파싱합니다.
+public class Mp3tagParser {
+	
+	//필드
+	private String title;
+	private String artist;
+	private String album;
+	private String genre; 		// 여기까지 게터만 구현
+	private int length;			// 게터메서드내에서 분,초 단위로 반환 타입은 String
+	private int lengthMinute;	// 이후 분, 초 출력은 차후에 스킵기능에 기준을 정할때 SET을 추가하면 좋을것 같음
+	private int lengthSecend;
+	
+	public String getTitle() {
+		return title;
+	}
+	public String getArtist() {
+		return artist;
+	}
+	public String getAlbum() {
+		return album;
+	}
+	public String getGenre() {
+		return genre;
+	}
+	public int getLength() {
+		return length;
+	}
+	public int getLengthMinute() {
+		return lengthMinute;
+	}
+	public int getLengthSecend() {
+		return lengthSecend;
+	}
+
+	
+	
+	public Mp3tagParser(){}
+	public Mp3tagParser(String path){
+		this.parse(path);
+	}
+	
+	//MP3파일 경로를 받아와서 필드에 저장
+	private void parse(String path) {
+		File file = new File(path); 
+		MP3File mp3;
+		try {
+			mp3 = (MP3File) AudioFileIO.read(file);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			mp3 = null;
+			System.out.println("mp3파일 태그 ERROR");
+		} 
+		
+
+		Tag tag = mp3.getTag();
+		
+		this.title = tag.getFirst(FieldKey.TITLE); 				// 노래제목
+		this.artist = tag.getFirst(FieldKey.ARTIST);  			// 아티스트
+		this.album = tag.getFirst(FieldKey.ALBUM); 				// 앨범
+		this.genre = tag.getFirst(FieldKey.GENRE);				// 장르
+		this.length = mp3.getAudioHeader().getTrackLength();	// 노래길이
+		this.lengthMinute = length / 60;						// 분 단위
+		this.lengthSecend = length % 60;						// 초 단위
+	
+	}
+	
+	public String toString() {					// 각 인자 값 출력. (길이는 분+초 단위 출력)
+		return "Mp3tagParser [title=" + title + ", artist=" + artist + ", album=" + album + ", genre=" + genre
+				+ ", length=" + lengthMinute + "minute " + lengthSecend +  "second]";
+	}
+	
+	public static void main(String[] args) {
+		Mp3tagParser tag = new Mp3tagParser("C:\\Users\\김기락\\Downloads\\004_Clean_Bandit_Jess_Gly_Rather_Be_feat__Jess_Gl.mp3");
+		
+		System.out.println(tag);
+	}
+}

@@ -1,0 +1,55 @@
+package Mp3tagParser;
+
+import java.io.File;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.mp3.MP3File; 
+import org.jaudiotagger.tag.FieldKey; 
+
+// mp3파일의 태그(노래제목, 아티스트, 장르등)를 파싱합니다.
+public class Mp3tagParser {
+	
+	//필드
+	private String title;
+	private String artist;
+	private String album;
+	private String genre; //이 까지 게터만 구현
+	private int length;	// 게터메서드내에서 분,초 단위로 반환 타입은 String
+	
+	public Mp3tagParser(){}
+	public Mp3tagParser(String path){
+		this.parse(path);
+	}
+	
+	//MP3파일 경로를 받아와서 필드에 저장
+	private void parse(String path) {
+		File file = new File(path); 
+		MP3File mp3;
+		try {
+			mp3 = (MP3File) AudioFileIO.read(file);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			mp3 = null;
+			System.out.println("mp3파일 태그 ERROR");
+		} 
+		Tag tag = mp3.getTag();
+		
+		this.title = tag.getFirst(FieldKey.TITLE); 				// 노래제목
+		this.artist = tag.getFirst(FieldKey.ARTIST);  			// 아티스트
+		this.album = tag.getFirst(FieldKey.ALBUM); 				// 앨범
+		this.genre = tag.getFirst(FieldKey.GENRE);				// 장르
+		this.length = mp3.getAudioHeader().getTrackLength();	//노래길이
+	}
+	
+	public String toString() {
+		return "Mp3tagParser [title=" + title + ", artist=" + artist + ", album=" + album + ", genre=" + genre
+				+ ", length=" + length + "]";
+	}
+	
+	public static void main(String[] args) {
+		Mp3tagParser tag = new Mp3tagParser("D:\\001_Clean Bandit, Love Sse_Mozart's House feat_ Lo.mp3");
+		
+		System.out.println(tag);
+	}
+}

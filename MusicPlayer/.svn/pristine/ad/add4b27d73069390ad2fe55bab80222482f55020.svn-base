@@ -1,0 +1,117 @@
+package UserService;
+
+import static MusicPlayerUtil.MusicPlayerCommon.nextLine;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.DataFormatException;
+
+import UserVo.User;
+
+// 유저서비스의 메서드를 구현하는 클래스입니다.
+public class UserServiceImpl extends User implements UserService {
+	private List<User> users = new ArrayList<User>();
+	private User user;
+	
+	
+	/*
+	 * {
+	 * 		로그인 메서드 호출
+	 * 		login(users)
+	 * 	login(List<User> users)
+	 * {
+	 * 	로그인하기, 게스트로 입장
+	 * 	
+	 * 	user = null;
+	 * return;
+	 * 
+	 * 	아이디 입력
+	 * 	비밀번호 입력
+	 * 	
+	 * 
+	 * 	 for(users)
+	 * 	{
+	 * 		조건식 아디 비번 이 다 맞을경우
+	 * 		user = 조건에맞는 데이터 대입 users -> user
+	 * 	}
+	 * }
+	 * 	
+	 * 
+	 * }
+	 */
+	
+	
+	/**
+	 * 
+	 * @author 김기락 210802
+	 * 회원가입, 유저 데이터 저장, 불러오기 기능 구현
+	 * Exception 선언이 맞지 않는 경우 조언 바람 
+	 * 
+	 */
+	
+	private void saveDb() throws IOException, ClassNotFoundException, DataFormatException {			//유저 데이터 저장
+		try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("UserDB.ser"))) {
+			oos.writeObject(users);
+		} catch (Exception e) {
+			System.out.println("파일 저장 중 오류가 발생 했습니다. 다시 진행해 주세요");			//파일 저장 중 오류가 발생 시 계정가입 메뉴로 돌아감
+			join();
+			return;
+		}
+	}
+	
+	private void loadDb() throws IOException, ClassNotFoundException, DataFormatException {			//유저 데이터 불러오기
+		try(ObjectInputStream ois = new ObjectInputStream(new FileInputStream("UserDB.ser"))) {
+			users = (List<User>) ois.readObject();
+		} catch (FileNotFoundException e) {															//파일을 못찾을 경우 더미데이터 생성
+			users.add(new User("testId1","testPw1"));
+			users.add(new User("testId2","testPw2"));
+			users.add(new User("testId3","testPw3"));
+			login();
+			return;
+		}
+	}
+	
+
+	public void join() throws ClassNotFoundException, IOException, DataFormatException {
+		String inputId = nextLine("아이디를 입력해 주세요. > ");							// 유저 생성할 아이디 입력
+		Map<String, String> userDb = new HashMap<>();										// 유저가 생성할 아이디와 패스워드를 담을 DbMap 생성
+		loadDb();																			// 유저목록 파일 불러오기
+		for(int i = 0; i < users.size(); i++) {												// 유저목록의 id들을 inputId와 비교 
+			if (inputId.equals(users.get(i).getId())) {										// 아이디 비교 한 결과 존재하면 로그인으로 진입
+				System.out.println("이미 존재하는 아이디 입니다.");
+				login();
+				return;
+			}
+		}
+
+		String inputPw = nextLine("패스워드를 입력해 주세요 > ");							// 패스워드 1차 입력
+		String inputPw2 = nextLine("패스워드를 다시 한번 입력해 주세요 > ");				// 패스워드 2차 입력
+
+		
+		if (!inputPw.equals(inputPw2)) {													// 입력된 패스워드 비교 후 다를 시 처음으로 회귀
+			System.out.println("비밀번호가 다릅니다. 처음부터 다시 시도해주세요.");
+			join();
+		} else {																			// 패스워드 동일 비교 통과 후 DbMap과 users리스트에 id pw 추가
+			userDb.put(inputId, inputPw);
+			users.add(new User(inputId, inputPw));
+			saveDb();
+			System.out.println("새로운 계정이 생성되었습니다. 로그인을 진행해 주세요.");
+			login();
+		}
+	}
+
+	// 로그인 서비스 클래스
+	public void login() {
+
+	}
+}

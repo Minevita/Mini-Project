@@ -1,0 +1,258 @@
+package MusicPlayerController;
+
+import static MusicPlayerUtil.MusicPlayerCommon.*;
+import java.util.ArrayList;
+import java.util.List;
+import MusicVo.Music;
+
+/**
+ * 뮤직플레이어 컨트롤러 클래스를 이용한 다양한 뮤직컨트롤 메서드를 제공합니다
+ * @author 문현석
+ * 2021-08-02
+ *
+ */
+public class MusicPlayerControllerServiceImpl extends Thread implements MusicPlayerControllerService{
+	
+	private MusicPlayerController mpc = new MusicPlayerController();
+	private List<Music> playList = new ArrayList<>();
+	
+	private int playIndex 		= 0; 			// 현재 재생순번을 기록하는 변수
+	private boolean isLoad		= false;		// 쓰레드를 이용하여 다음곡 로드를 할것인지 선택하는 flag
+	private Thread thread       = null;
+	private boolean isRun		= true;
+	private int saveState 		= INIT;
+	
+	/**
+	 * 외부에서 뮤직리스트를 이용해 생성할때 플레이인덱스 또한 0으로 초기화 해줍니다.
+	 * 또한기존리스트의 인스턴스와 연결을 끊습니다.
+	 * @author 문현석
+	 * 2021-08-03
+	 */
+	public void setPlayList(List<Music> playList) {
+		this.playList = null;
+		this.playList = new ArrayList<>(playList);
+		this.playIndex = 0;
+	}
+	
+	public List<Music> getPlayList() {
+		return this.playList;
+	}
+	
+	public int getPlayIndex() {
+		return this.playIndex;
+	}
+	
+	/**
+	 * 외부에서 선택한곡을 바로 재생하길 원할때 호출되는 메서드입니다.
+	 */
+	public void instantPlay(Music music) { 
+		//현재 리스트가 비어있으면 리스트에 추가하고 바로 재생
+		if(playList.isEmpty()) { 
+			playList.add(music);
+			playSequence(STARTED);
+		}
+		//현재 리스트에 노래가있을경우, 바로 재생할 music을 리스트 다음 인덱스에 추가하고
+		//플레이인덱스를 증가시켜 방금 추가한 노래를 바로 재생시킴.
+		else {
+			//다음 인덱스가 범위를 벗어난 경우 바로 추가하고 재생시킨다.
+			int nextIndex = playIndex + 1;
+			if(nextIndex >= playList.size()) {
+				playList.add(music);
+			}
+			else {
+				playList.add(nextIndex, music);
+			}
+			playIndex++;
+			playSequence(STARTED);
+		}
+		if(mpc.getThread() == null) mpc.start();
+		if(thread == null) start();
+	}
+
+	/**
+	 * 입력된 키값에 따라 컨트롤러를 조작합니다.
+	 * synchronized 하지 않으면 수많은 버그초래
+	 * @author 문현석
+	 * 2021-08-03
+	 */
+	public void playListControl() {
+		if(playList == null) {
+			System.out.println("재생할 리스트가 없습니다.");
+			return;
+		}
+		else if(playList.isEmpty()){
+			System.out.println("재생할 리스트가 없습니다.");
+			return;
+		}
+		
+		String musicPath = playList.get(playIndex).getPath();
+		mpc.open(musicPath);
+		if(mpc.getThread() == null) mpc.start();
+		if(thread == null) start();
+		
+		while(true) {
+			safeIndexing();
+			playInfoView(); //컨트롤러 출력부분 메서드
+			int input = scanner.nextInt();
+			
+			switch (input) {
+			case 1: //.재생
+				play(mpc.getState());
+				break;
+			case 2: //.정지
+				mpc.setState(STOPPED);
+				System.out.println("정지");
+				break;
+			case 3: //.리스트의 이전곡 선택 공통된 코드를 따로 만들것
+				playIndex--;
+				playSequence(mpc.getState());
+				break;
+			case 4: //.리스트의 다음곡 선택
+				playIndex++;
+				playSequence(mpc.getState());
+				break;
+			case 5: 
+				//.쓰레드 종료(컨트롤러 종료) 로그아웃했을때 호출되게 변경이 필요함.
+//				thisThread.interrupt();
+				closeThread();
+				return;
+			default:
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * 뮤직컨트롤 쓰레드의 재생상태에따라서 재생할지 일시정지 할지 결정합니다.
+	 * @author 문현석
+	 * 2021-08-04
+	 * @param musicState
+	 */
+	private void play(int musicState) {
+		if(musicState == STARTED) {
+			mpc.setState(SUSPENDED);
+		}
+		else if(musicState == SUSPENDED) {
+			mpc.setState(STARTED);
+		}
+		else {
+			mpc.setState(STARTED);
+		}
+	}
+	
+	/**
+	 * 다음곡, 이전곡 기능을 구현한 메서드입니다.
+	 * @author 문현석
+	 * 2021-08-04
+	 * @param musicState(mp3파일을 재생중인 쓰레드의 재생상태)
+	 * @param sqsIndex(다음곡인지 이전곡인지 전달하는 정수형 변수입니다)
+	 */
+	private void playSequence(int musicState) {
+		// 디코딩 도중 사용자가 다음곡,이전곡 으로 전환할시 디코딩을 스팁한다.
+		if(mpc.isDecoding()) mpc.setDecodeSkip(true);
+		
+		mpc.setSkip(true); 		//재생도중 곡을 변경하면 재생로직을 빠져나간다.
+		mpc.close();			//재생중이던 곡의 데이터를 지운다.
+//		saveState = musicState;
+		isLoad = true;
+	}
+	
+	/**
+	 * 뮤직리스트의 인덱스가 범위를 넘어갔을때 안전하게 처리함.
+	 */
+	private void safeIndexing() {
+		if(playIndex < 0 ) playIndex = playList.size() -1;
+		else if(playIndex >= playList.size()) playIndex = 0;
+	}
+	
+	/**
+	 * 멀티쓰레드를 이용해서 파일을 로드하는 동시에 메인쓰레드는 정보를 출력하게했음.
+	 * @author 문현석
+	 * 2021-08-07
+	 * @param musicState
+	 */
+	private void preLoad() {
+		if(!isLoad) return;
+		mpc.open(playList.get(playIndex).getPath());
+		
+		if(this.mpc.getState() == FINISHED) this.mpc.setState(STARTED);
+//		else mpc.setState(saveState);
+		
+		isLoad = false;
+	}
+	
+	/**
+	 * 한곡이 끝났을때 다음곡을 재생시킴.
+	 * @author 문현석
+	 * 2021-08-05
+	 */
+	private void autoPlay() {
+		if(mpc.getState() == FINISHED) {
+			playIndex++;
+			playSequence(STARTED);
+		}
+	}
+	
+	/**
+	 * 컨트롤러의 뷰어부분입니다.
+	 * @author 문현석
+	 * 2021-08-05
+	 */
+	private void playInfoView() {
+		System.out.println("\n\n\n\n\n");
+		if(playList.size() <= playIndex + 1) {
+			System.out.println("다음 곡명 : 리스트 마지막 입니다.");
+		}
+		else {
+			System.out.println("다음 곡명 : " + playList.get(playIndex + 1).getTag(TITLE));
+		}
+		System.out.println("현재 곡명 : " + playList.get(playIndex).getTag(TITLE));
+		System.out.print("1.재생/일시정지    2.정지    3.이전곡    4.다음곡    5.종료");
+	}
+	
+	/**
+	 * 왜 this의 new Thread로 생성하지 않으면 interrupt가 작동하지 않을까? 
+	 * -> 잘못 이해했다 쓰레드의 interrupt는 즉시 실행되는게 아니라 쓰레드가
+	 * 일시 정지 상태가 되면  interruptException이 발생하고 이때 interrupt가 실행된다. 
+	 * @author 문현석
+	 * 2021-08-05
+	 */
+	public void start() {
+		synchronized(this) {
+			if(thread == null) {
+				thread = new Thread(this);
+			}
+			thread.start();
+		}
+	}
+	
+	/**
+	 * autoPlay와 preLoad메서드를 멀티쓰레드로 작동시킴
+	 * 이유: 출력부분과 메인쓰레이드에서 실행되는 로직과 별개로 작동시키기 위해서
+	 * @author 문현석
+	 * 2021-08-05
+	 */
+	public void run() {
+		while(thread.isAlive()) { //while문의 조건으로 isRun을 줘버렸는데 쓰레드가 일을 안한다.. 뭐지? 
+			if(!isRun) break;
+			autoPlay();
+			safeIndexing(); //preLoad보다 우선순위가 빨라야 함.
+			preLoad();
+		}
+		isRun = true;
+		thread = null;
+	}
+	
+	/**
+	 * 외부에서 쓰레드를 종료시킬때 호출하는 메서드입니다.
+	 * @author 문현석
+	 * 2021-08-06
+	 */
+	public void closeThread() {
+		isRun = false;
+		playList.clear();
+		playIndex = 0;
+		saveState = INIT;
+		mpc.closeThread();
+	}
+}

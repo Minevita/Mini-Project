@@ -1,0 +1,218 @@
+package MusicPlayerService;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.LogManager;
+
+import MusicVo.*;
+import UserService.UserService;
+import UserService.UserServiceImpl;
+import Mp3PathParser.*;
+import UserVo.*;
+/**
+ * @author 문현석
+ * 2021-07-30
+ * MusicPlayerUtill -> MusicPlayerUtil로 변경
+ * MusicPlayerCommon내의 멤버는 new없이 사용가능
+ */
+import static MusicPlayerUtil.MusicPlayerCommon.*;
+
+/**
+ * @author 김문수 2021-07-28 MusicPlayerServie 인터페이스의 기능 구현. 실제 구동의 경우 testList는
+ *         systemPlayList가 되어야 함. allList 구현 작업중
+ */
+public class MusicPlayerServiceimpl implements MusicPlayerService {
+	/**
+	 * @author 문현석 2021-08-02 systemPlayList는 실제 재생을 원하는 곡들만 저장되는 리스트 입니다. allList는
+	 *         초기 음악폴더를 파싱할때 모든 곡리스트를 저장합니다.
+	 */
+	private List<Music> systemPlayList = new ArrayList<Music>();
+	private List<Music> allList = new ArrayList<Music>();
+	private Mp3PathParser mp3PathParser;
+
+	{
+		//유저의 데이터를 받아와서 뮤직서비스임플리먼트 멤버의 유저로 받아들임
+//		UserService us = new UserServiceImpl();
+//		us.getUser(); // 유저서비스 임플리먼트에 생성된 유저의 주소값
+		
+		
+		String directoryPath = nextLine("음악폴더 경로를 지정해주세요.>");
+		mp3PathParser = new Mp3PathParser(directoryPath);
+		LogManager.getLogManager().reset();
+		for (String filePath : mp3PathParser.getPathList()) {
+			Music music = new Music(filePath);
+
+			if (music.getTag().isTrash())
+				continue;
+			allList.add(music);
+		}
+	}
+
+	/**
+	 * @author 김문수 2021-07-29 allList 구현 후 1차 수정. 음악의 모든 목록을 페이지를 나눠서 출력. 페이지 이동, 곡
+	 *         선택 구현.
+	 */
+	public void allList() {
+		System.out.println("폴더내 전체보기 메뉴입니다.");
+		listViewer(allList);
+	}
+
+	public void createMyList() {
+		String name = nextLine("MyList입니다. 리스트 이름을 지어주세요.");
+		ArrayList<String> testMyList = new ArrayList<String>();
+	}
+
+	public void myList() {
+
+	}
+
+	public void favoritList() {
+
+	}
+
+	/**
+	 * 
+	 * @author 김기락 210801 systemPlayList의 내에 검색한 단어가 존재할 경우 해당 배열 값 출력
+	 * 
+	 */
+	public void search(List<Music> musicList) {
+		/**
+		 * @author 문현석 조언 스트링 컨테인스 메서드를 이용해서 해당하는 뮤직객체를 추출 (뮤직객체의 타이틀, 아티스트명, 앨범명 등을
+		 *         검색어와 컨테인스) 하시고 임시 리스트에 추가해줍니다 그리고 리스트뷰어 메서드에 임시메서드를 인자로 넣어주세요.
+		 * 
+		 */
+		
+		List<Music> tempList = new ArrayList<Music>();
+		
+		int input = nextInt("1.곡명 2.가수명 3.앨범명 4.장르 0.뒤로가기\n검색할 메뉴를 입력하세요 : ");
+		
+		switch (input) {
+		case 1:
+			tempList = searchBy(TITLE, musicList);
+			break;
+		case 2:
+			tempList = searchBy(ARTIST, musicList);
+			break;
+		case 3:
+			tempList = searchBy(ALBUM, musicList);
+			break;
+		case 4:
+			tempList = searchBy(GENRE, musicList);
+			break;
+		case 0:
+			return;
+		default:
+			break;
+		}
+		
+		if(tempList == null) { 
+			search(musicList);
+			return;
+		}
+		else {
+			listViewer(tempList);
+		}
+	}
+
+	private List<Music> searchBy(String tagType, List<Music> musicList) {
+		String input = nextLine("검색할 " + tagType +" 명을 입력하세요 : ");
+		
+		List<Music> tempList = new ArrayList<Music>();
+
+		for (int i = 0; i < musicList.size(); i++) {
+
+			Music index = musicList.get(i);
+
+			// 비교하는 문자열을 대문자로 만들고 검색하는 문자열도 대문자로 만들어서 문자열이 있는지 확인
+			if (index.getTag(tagType).toUpperCase().contains(input.toUpperCase())) {
+				tempList.add(index);
+			}
+		}
+		if (tempList.isEmpty()) {
+			System.out.println("검색하신 항목이 리스트에 없습니다.");
+			return null; //오류가 발생할수있는 부분
+		} else {
+			return tempList;
+		}
+	}
+
+	/**
+	 * @author 현석 기능 테스트를 위한 임시 main메서드 입니다.
+	 * 
+	 */
+	public static void main(String[] args) {
+		// 임플리먼트 타입으로 인스턴스를 받아야 임플리먼트에 있는 모든 메소드를 호출 가능해집니다.
+		MusicPlayerServiceimpl mps = new MusicPlayerServiceimpl();
+
+		// 실제 Ex에서는 이렇게 생성할겁니다. (인터페이스에 정의돼있지 않은 메소드는 호출 불가입니다.)
+//		MusicPlayerService mps2 = new MusicPlayerServiceimpl();
+
+		mps.allList();
+	}
+
+	/**
+	 * 
+	 * @param list
+	 */
+	private void listViewer(List<Music> list) {
+		int input = 0;
+		if (list.isEmpty()) {
+			System.out.println("리스트가 비었습니다.");
+			return;
+		}
+		int printNum = 10;
+		int num = printNum;
+		int j = 0;
+		int cnt = 0;
+		while (true) {
+			for (int i = 0 + j; i < printNum + j; i++) {
+				if (0 <= i && i < list.size())
+					System.out.println((num++ - printNum + 1) + ". " + list.get(i));
+				if ((i + 1) % printNum == 0 && cnt != 0) {
+					num = printNum;
+					System.out.println();
+					System.out.println("Page " + (cnt + 1) + " / " + (int) (list.size() / (float) num + 0.9));
+					input = nextInt("이전 : 1    다음 : 2    종료 : 3    음악선택 : 4    검색 : 5");
+				} else if ((i + 1) % printNum == 0 && cnt == 0) {
+					num = printNum;
+					System.out.println();
+					System.out.println("Page " + (cnt + 1) + " / " + (int) (list.size() / (float) printNum + 0.9));
+					input = nextInt("다음 : 2    종료 : 3    음악선택 : 4    검색 : 5");
+				} else if (i == list.size() - 1) {
+					num = printNum;
+					System.out.println();
+					System.out.println("Page " + (cnt + 1) + " / " + (int) (list.size() / (float) printNum + 0.9));
+					input = nextInt("이전 : 1    종료 : 3    음악선택 : 4    검색 : 5");
+				}
+				switch (input) {
+				case 1:
+					System.out.println();
+					j -= printNum;
+					cnt--;
+					break;
+				case 2:
+					System.out.println();
+					j += printNum;
+					cnt++;
+					break;
+				case 3:
+					System.out.println();
+					return;
+				case 4:
+					System.out.println();
+					input = nextInt("[ " + (printNum - printNum + 1) + " ~ " + printNum + " ]" + " 음악 번호를 입력하세요. ");
+					System.out.println();
+					System.out.println("Selected >>>  " + systemPlayList.get((input - 1) + cnt * printNum) + "   <<<");
+					System.out.println();
+					input = nextInt("재생 : 1   마이리스트 추가 : 2    즐겨찾기 : 3");
+					break;
+				case 5:
+					search(list);
+					break;
+				}
+			}
+		}
+	}
+}

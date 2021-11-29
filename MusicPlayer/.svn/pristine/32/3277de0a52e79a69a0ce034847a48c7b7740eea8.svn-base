@@ -1,0 +1,16 @@
+package MusicPlayerService;
+
+/**
+ * @author 김문수
+ * 2021-07-28
+ * Music매서드 기능 정의 인터페이스
+ */
+public interface MusicPlayerService {
+	
+	void allList();
+	
+	void myList();
+	
+	void favoritList();
+
+}
